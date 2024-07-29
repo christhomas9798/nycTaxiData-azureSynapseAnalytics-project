@@ -1,0 +1,84 @@
+{
+	"name": "pl_create_silver_taxi_zone",
+	"properties": {
+		"activities": [
+			{
+				"name": "Delete Silver Taxi Zone",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_nyc_taxi_dynamic",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_folderPath": {
+								"value": "@variables('v_folder_path')",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "create silver taxi zone",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Delete Silver Taxi Zone",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_serverless_sql_pool_nyc_taxi_ldw",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "if object_id('silver.taxi_zone') is not null drop  EXTERNAL table silver.taxi_zone;\n"
+						},
+						{
+							"type": "Query",
+							"text": "create external table silver.taxi_zone\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/taxi_zone',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.taxi_zone;\n"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"variables": {
+			"v_folder_path": {
+				"type": "String",
+				"defaultValue": "silver/taxi_zone"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-07-29T05:44:09Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

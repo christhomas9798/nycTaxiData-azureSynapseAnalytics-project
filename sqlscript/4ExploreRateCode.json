@@ -1,0 +1,20 @@
+{
+	"name": "4ExploreRateCode",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
+		"content": {
+			"query": "-- This is auto-generated code\nSELECT \n/* --> place the keys that you see in JSON documents in the WITH clause:\n       , JSON_VALUE (jsonContent, '$.key1') AS header1\n       , JSON_VALUE (jsonContent, '$.key2') AS header2\n*/\n* FROM\n    OPENROWSET(\n        BULK 'https://synapsecourse123678dl.dfs.core.windows.net/nyc-taxi-data/raw/rate_code.json',\n        FORMAT = 'CSV',\n        FIELDQUOTE = '0x0b',\n        FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR = '0x0b'\n    )\n    WITH (\n        jsonContent varchar(MAX)\n    ) AS [result] cross apply openjson(jsonContent)\nwith (rate_code_id SMALLINT,\nrate_code varchar(20))",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

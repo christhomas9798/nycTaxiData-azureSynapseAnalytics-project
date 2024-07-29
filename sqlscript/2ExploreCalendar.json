@@ -1,0 +1,20 @@
+{
+	"name": "2ExploreCalendar",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
+		"content": {
+			"query": "-- This is auto-generated code\n\n\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'calendar.csv',\n        HEADER_ROw=TRUE,\n        DATA_SOURCE='nyc_taxi_data_raw',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) \n    with (date_key VARCHAR(8),\ndate DATE,\nyear SMALLINT,\nmonth SMALLINT,\nday SMALLINT,\nday_name VARCHAR(10)\n,day_of_year SMALLINT\n,week_of_month smallint\n,week_of_year smallint\n,month_name varchar(10)\n,year_month VARCHAR(10)\n,year_week varchar(7))\n    AS [result]\n\n\nexec sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''calendar.csv'',\n        HEADER_ROw=TRUE,\n        DATA_SOURCE=''nyc_taxi_data_raw'',\n        FORMAT = ''CSV'',\n        PARSER_VERSION = ''2.0''\n    ) \n    with (date_key VARCHAR(8),\ndate DATE,\nyear SMALLINT,\nmonth SMALLINT,\nday SMALLINT,\nday_name VARCHAR(10)\n,day_of_year SMALLINT\n,week_of_month smallint\n,week_of_year smallint\n,month_name varchar(10)\n,year_month VARCHAR(10)\n,year_week varchar(7))\n    AS [result]'",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_zone",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

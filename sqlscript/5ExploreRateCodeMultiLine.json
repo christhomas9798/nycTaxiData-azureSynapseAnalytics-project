@@ -1,0 +1,20 @@
+{
+	"name": "5ExploreRateCodeMultiLine",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
+		"content": {
+			"query": "-- This is auto-generated code\nSELECT rate_code_id,rate_code\n/* --> place the keys that you see in JSON documents in the WITH clause:\n       , JSON_VALUE (jsonContent, '$.key1') AS header1\n       , JSON_VALUE (jsonContent, '$.key2') AS header2\n*/\nFROM\n    OPENROWSET(\n        BULK 'https://synapsecourse123678dl.dfs.core.windows.net/nyc-taxi-data/raw/rate_code_multi_line.json',\n        FORMAT = 'CSV',\n        FIELDQUOTE = '0x0b',\n        FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR = '0x0b'\n    )\n    WITH (\n        jsonContent nvarchar(MAX)\n    ) AS [result] cross apply openjson(jsonContent) with (rate_code_id smallint, rate_code varchar(20))\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

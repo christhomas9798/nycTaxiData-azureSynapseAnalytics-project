@@ -1,0 +1,20 @@
+{
+	"name": "3ExplorePaymentType",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
+		"content": {
+			"query": "-- This is auto-generated code\nSELECT TOP 100\n    jsonContent\n/* --> place the keys that you see in JSON documents in the WITH clause:\n       , JSON_VALUE (jsonContent, '$.key1') AS header1\n       , JSON_VALUE (jsonContent, '$.key2') AS header2\n*/\nFROM\n    OPENROWSET(\n        BULK 'https://synapsecourse123678dl.dfs.core.windows.net/nyc-taxi-data/raw/payment_type.json',\n        FORMAT = 'CSV',\n       --FIELDQUOTE = '0x0b',\n       FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR = '0x0a'\n    )\n    WITH (\n        jsonContent varchar(MAX)\n    ) AS [result]\n\n\n\n\nSELECT top 100\n    cast(JSON_VALUE(jsonContent,'$.payment_type') as SMALLINT) payment_type,\n     cast(  JSON_VALUE(jsonContent,'$.payment_type_desc') as VARCHAR(15)) payment_type\n/* --> place the keys that you see in JSON documents in the WITH clause:\n       , JSON_VALUE (jsonContent, '$.key1') AS header1\n       , JSON_VALUE (jsonContent, '$.key2') AS header2\n*/\nFROM\n    OPENROWSET(\n        BULK 'https://synapsecourse123678dl.dfs.core.windows.net/nyc-taxi-data/raw/payment_type.json',\n        FORMAT = 'CSV',\n      FIELDQUOTE = '0x0b',\n       FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR = '0x0a',\n        PARSER_VERSION='1.0'\n    )\n    WITH (\n        jsonContent nvarchar(MAX)\n    ) AS [result]\n\n\n\n\n\n\n\n    SELECT payment_type,payment_type_desc\nFROM\n    OPENROWSET(\n        BULK 'payment_type.json',\n        DATA_SOURCE='nyc_taxi_data_raw',\n        FORMAT = 'CSV',\n      FIELDQUOTE = '0x0b',\n       FIELDTERMINATOR ='0x0b',\n       ROWTERMINATOR = '0x0a',\n        PARSER_VERSION='1.0'\n    )\n    WITH (\n        jsonContent nvarchar(MAX)\n    ) AS [result] cross APPLY\n    openjson(jsonContent) with(\n        payment_type smallint,\n        payment_type_desc varchar(20)\n    )\n\n\n\n\n\n\n\n\n    SELECT JSON_VALUE(jsonContent,'$.payment_type')\n   --,json_value(jsonContent,'$.payment_type_desc[0].sub_type')\n   ,json_value(jsonContent,'$.payment_type_desc[0].value')\n   ,json_value(jsonContent,'$.payment_type_desc[1].value')\nFROM\n    OPENROWSET(\n        BULK 'payment_type_array.json',\n        DATA_SOURCE='nyc_taxi_data_raw',\n        FORMAT = 'CSV',\n      FIELDQUOTE = '0x0b',\n       FIELDTERMINATOR ='0x0b',\n       ROWTERMINATOR = '0x0a',\n        PARSER_VERSION='1.0'\n    )\n    WITH (\n        jsonContent nvarchar(MAX)\n    ) AS [result]\n\n\n\n\n    SELECT *\nFROM\n    OPENROWSET(\n        BULK 'payment_type_array.json',\n        DATA_SOURCE='nyc_taxi_data_raw',\n        FORMAT = 'CSV',\n      FIELDQUOTE = '0x0b',\n       FIELDTERMINATOR ='0x0b',\n       ROWTERMINATOR = '0x0a',\n        PARSER_VERSION='1.0'\n    )\n    WITH (\n        jsonContent nvarchar(MAX)\n    ) AS [result] cross apply openjson(jsonContent) with (payment_type smallint, payment_type_desc nvarchar(max) as json)\n    cross apply openjson(payment_type_desc) with (sub_type smallint,payment_type_desc_value varchar(20) '$.value')",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_zone",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

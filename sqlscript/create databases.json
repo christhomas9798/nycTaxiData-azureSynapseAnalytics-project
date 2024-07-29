@@ -1,0 +1,17 @@
+{
+	"name": "create databases",
+	"properties": {
+		"content": {
+			"query": "use master\nGO\n\ncreate database myc_taxi_dw;\ngo\n\ndrop database myc_taxi_dw\n\ncreate database nyc_taxi_ldw;\n\nalter DATABASE nyc_taxi_ldw collate latin1_general_100_bin2_utf8\n\nuse nyc_taxi_ldw\n\ncreate schema gold\n\ncreate schema silver\n\ncreate schema bronze\n\nif not exists (select * FROM sys.external_data_sources where name='nyc_taxi_src')\ncreate external data source nyc_taxi_src\nwith (location= 'https://synapsecourse123678dl.dfs.core.windows.net/nyc-taxi-data')\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
