@@ -16,14 +16,8 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "ds_nyc_taxi_dynamic",
-						"type": "DatasetReference",
-						"parameters": {
-							"p_folderPath": {
-								"value": "@variables('v_folder_path')",
-								"type": "Expression"
-							}
-						}
+						"referenceName": "ds_nyc_taxi_silver_taxi_zone",
+						"type": "DatasetReference"
 					},
 					"enableLogging": false,
 					"storeSettings": {
