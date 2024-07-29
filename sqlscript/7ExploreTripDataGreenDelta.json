@@ -1,6 +1,9 @@
 {
-	"name": "SQL script 8",
+	"name": "7ExploreTripDataGreenDelta",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
 		"content": {
 			"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'trip_data_green_delta/',\n        DATA_SOURCE ='nyc_taxi_data_raw',\n        FORMAT = 'DELTA'\n    ) AS [result]\n",
 			"metadata": {

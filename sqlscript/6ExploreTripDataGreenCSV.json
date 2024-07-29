@@ -1,6 +1,9 @@
 {
-	"name": "SQL script 6",
+	"name": "6ExploreTripDataGreenCSV",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
 		"content": {
 			"query": "-- This is auto-generated code\nwith a as (SELECT\n  result.filename() file_name,result.filepath() file_path,  *\nFROM\n    OPENROWSET(\n        BULK 'trip_data_green_csv/year=*/**',\n        DATA_SOURCE='nyc_taxi_data_raw',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0',\nHEADER_ROW=true\n    ) AS [result])\n    select distinct file_name from a",
 			"metadata": {
