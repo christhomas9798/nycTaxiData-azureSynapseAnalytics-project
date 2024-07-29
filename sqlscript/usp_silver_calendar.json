@@ -5,7 +5,7 @@
 			"name": "nyc_taxi/silver"
 		},
 		"content": {
-			"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_calendar\nAS\nbegin\nif object_id('silver.calendar') is not null drop  EXTERNAL table silver.calendar;\n\ncreate external table silver.calendar\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/calendar',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.calendar;\n\n end \n\n\n",
+			"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_calendar') is not null drop procedure silver.usp_calendar;\n\ncreate or alter PROCEDURE silver.usp_silver_calendar\nAS\nbegin\nif object_id('silver.calendar') is not null drop  EXTERNAL table silver.calendar;\n\ncreate external table silver.calendar\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/calendar',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.calendar;\n\n end \n\n\n",
 			"metadata": {
 				"language": "sql"
 			},

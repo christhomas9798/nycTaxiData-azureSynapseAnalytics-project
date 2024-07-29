@@ -5,7 +5,7 @@
 			"name": "nyc_taxi/silver"
 		},
 		"content": {
-			"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_rate_code\nas\nbegin\n\nif object_id('silver.rate_code') is not null drop  EXTERNAL table silver.rate_code;\n\ncreate external table silver.rate_code\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/rate_code',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vw_rate_code;\n end \n\n\n",
+			"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_rate_code') is not null drop procedure silver.usp_rate_code;\n\ncreate or alter PROCEDURE silver.usp_silver_rate_code\nas\nbegin\n\nif object_id('silver.rate_code') is not null drop  EXTERNAL table silver.rate_code;\n\ncreate external table silver.rate_code\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/rate_code',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vw_rate_code;\n end \n\n\n",
 			"metadata": {
 				"language": "sql"
 			},

@@ -71,7 +71,7 @@
 			},
 			"v_usp_name": {
 				"type": "String",
-				"defaultValue": "silver.usp_taxi_zone"
+				"defaultValue": "silver.usp_silver_taxi_zone"
 			}
 		},
 		"annotations": [],
