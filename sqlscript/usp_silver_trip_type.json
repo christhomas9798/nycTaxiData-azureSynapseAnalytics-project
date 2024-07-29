@@ -5,7 +5,7 @@
 			"name": "nyc_taxi/silver"
 		},
 		"content": {
-			"query": "create or alter PROCEDURE silver.usp_taxi_zone\nAS\nbegin\n\nif object_id('silver.trip_type') is not null drop  EXTERNAL table silver.trip_type;\n\ncreate external table silver.trip_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/trip_type',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.trip_type;\n\nend",
+			"query": "\nif object_id('silver.usp_trip_type') is not null drop procedure silver.usp_trip_type;\n\n\ncreate or alter PROCEDURE silver.usp_silver_trip_type\nAS\nbegin\n\nif object_id('silver.trip_type') is not null drop  EXTERNAL table silver.trip_type;\n\ncreate external table silver.trip_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/trip_type',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.trip_type;\n\nend",
 			"metadata": {
 				"language": "sql"
 			},

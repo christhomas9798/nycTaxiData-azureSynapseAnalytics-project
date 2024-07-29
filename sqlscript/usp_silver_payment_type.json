@@ -5,7 +5,7 @@
 			"name": "nyc_taxi/silver"
 		},
 		"content": {
-			"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_payment_type\nAS\nbegin\nif object_id('silver.payment_type') is not null drop  EXTERNAL table silver.payment_type;\n\ncreate external table silver.payment_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/payment_type',\n    file_format=parquet_file_format\n)\nAS\nselect  payment_type, payment_type_desc from openrowset(\n    bulk 'raw/payment_type.json',\n    data_source='nyc_taxi_src',\n    format='CSV',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b',\n    ROWTERMINATOR='0x0a'\n) with (jsonContent nvarchar(max))as result\ncross apply OPENjson(jsonContent) with (payment_type tinyint, payment_type_desc varchar(20));\n end \n\n\n",
+			"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_payment_type') is not null drop procedure silver.usp_payment_type;\n\ncreate or alter PROCEDURE silver.usp_silver_payment_type\nAS\nbegin\nif object_id('silver.payment_type') is not null drop  EXTERNAL table silver.payment_type;\n\ncreate external table silver.payment_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/payment_type',\n    file_format=parquet_file_format\n)\nAS\nselect  payment_type, payment_type_desc from openrowset(\n    bulk 'raw/payment_type.json',\n    data_source='nyc_taxi_src',\n    format='CSV',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b',\n    ROWTERMINATOR='0x0a'\n) with (jsonContent nvarchar(max))as result\ncross apply OPENjson(jsonContent) with (payment_type tinyint, payment_type_desc varchar(20));\n end \n\n\n",
 			"metadata": {
 				"language": "sql"
 			},

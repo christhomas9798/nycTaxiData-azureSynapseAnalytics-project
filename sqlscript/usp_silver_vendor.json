@@ -5,7 +5,7 @@
 			"name": "nyc_taxi/silver"
 		},
 		"content": {
-			"query": "create or alter PROCEDURE silver.usp_vendor\nAS\nbegin\n\nif object_id('silver.vendor') is not null drop  EXTERNAL table silver.vendor;\n\ncreate external table silver.vendor\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/vendor',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vendor;\n\nend",
+			"query": "if object_id('silver.usp_vendor') is not null drop procedure silver.usp_vendor;\n\n\ncreate or alter PROCEDURE silver.usp_silver_vendor\nAS\nbegin\n\nif object_id('silver.vendor') is not null drop  EXTERNAL table silver.vendor;\n\ncreate external table silver.vendor\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/vendor',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vendor;\n\nend",
 			"metadata": {
 				"language": "sql"
 			},
