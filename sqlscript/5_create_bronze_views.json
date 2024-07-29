@@ -1,6 +1,9 @@
 {
-	"name": "SQL script 12",
+	"name": "5_create_bronze_views",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/bronze"
+		},
 		"content": {
 			"query": "create view bronze.vw_rate_code\nAS\nselect  rate_code_id,rate_code from openrowset(\n    bulk 'raw/rate_code.json',\n    data_source='nyc_taxi_src',\n    format='CSV',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b',\n    ROWTERMINATOR='0x0b'\n) with (jsonContent nvarchar(max))as result\ncross apply OPENjson(jsonContent) with (rate_code_id tinyint, rate_code varchar(20))\n\nselect * from bronze.vw_rate_code\n\n\n\ncreate view bronze.vw_payment_type\nAS\nselect  payment_type, payment_type_desc from openrowset(\n    bulk 'raw/payment_type.json',\n    data_source='nyc_taxi_src',\n    format='CSV',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b',\n    ROWTERMINATOR='0x0a'\n) with (jsonContent nvarchar(max))as result\ncross apply OPENjson(jsonContent) with (payment_type tinyint, payment_type_desc varchar(20))\n\nselect * from bronze.vw_payment_type",
 			"metadata": {

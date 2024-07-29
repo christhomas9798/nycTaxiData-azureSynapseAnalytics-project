@@ -1,6 +1,9 @@
 {
-	"name": "create file format",
+	"name": "create_file_format",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/bronze"
+		},
 		"content": {
 			"query": "-- Create an external file format for DELIMITED (CSV/TSV) files.\nCREATE EXTERNAL FILE FORMAT csv_file_format\nWITH (\n        FORMAT_TYPE = DELIMITEDTEXT\n    , FORMAT_OPTIONS (  FIELD_TERMINATOR = ',', STRING_DELIMITER = '\"'\n    ,FIRST_ROW = 2\n    , USE_TYPE_DEFAULT = FALSE\n     ,ENCODING = 'UTF8'\n     ,PARSER_VERSION = '2.0'))\n\n\n\n-- Create an external file format for DELIMITED (CSV/TSV) files.\nif not exists (select * from sys.external_file_formats where name='csv_file_format_pv1')\n    CREATE EXTERNAL FILE FORMAT csv_file_format_pv1\n    WITH (\n            FORMAT_TYPE = DELIMITEDTEXT\n        , FORMAT_OPTIONS (  FIELD_TERMINATOR = ',', STRING_DELIMITER = '\"'\n        ,FIRST_ROW = 2\n        , USE_TYPE_DEFAULT = FALSE\n        ,ENCODING = 'UTF8'\n        ,PARSER_VERSION = '1.0'))\n\n\n\n        if not exists (select * from sys.external_file_formats where name='tsv_file_format_pv1')\n    CREATE EXTERNAL FILE FORMAT tsv_file_format_pv1\n    WITH (\n            FORMAT_TYPE = DELIMITEDTEXT\n        , FORMAT_OPTIONS (  FIELD_TERMINATOR = '\\t', STRING_DELIMITER = '\"'\n        ,FIRST_ROW = 2\n        , USE_TYPE_DEFAULT = FALSE\n        ,ENCODING = 'UTF8'\n        ,PARSER_VERSION = '1.0'))\n\n\n\n\n\n        if not exists (select * from sys.external_file_formats where name='parquet_file_format')\n    CREATE EXTERNAL FILE FORMAT parquet_file_format\n    WITH (\n            FORMAT_TYPE = PARQUET,\n        DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'\n      )\n\n\n          if not exists (select * from sys.external_file_formats where name='delta_file_format')\n    CREATE EXTERNAL FILE FORMAT delta_file_format\n    WITH (\n            FORMAT_TYPE = DELTA,\n        DATA_COMPRESSION = 'org.apache.hadoop.io.compress.SnappyCodec'\n      )",
 			"metadata": {

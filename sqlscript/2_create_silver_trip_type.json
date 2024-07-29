@@ -1,6 +1,9 @@
 {
-	"name": "7_create_silver_trip_type",
+	"name": "2_create_silver_trip_type",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/silver"
+		},
 		"content": {
 			"query": "use nyc_taxi_ldw\n\nif object_id('silver.trip_type') is not null drop  EXTERNAL table silver.trip_type\n\ncreate external table silver.trip_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/trip_type',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.trip_type\n\n\nselect * from silver.trip_type\n\n",
 			"metadata": {

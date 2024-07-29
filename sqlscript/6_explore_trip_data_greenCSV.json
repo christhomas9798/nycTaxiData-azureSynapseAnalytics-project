@@ -1,5 +1,5 @@
 {
-	"name": "6ExploreTripDataGreenCSV",
+	"name": "6_explore_trip_data_greenCSV",
 	"properties": {
 		"folder": {
 			"name": "nyc_taxi/discovery"

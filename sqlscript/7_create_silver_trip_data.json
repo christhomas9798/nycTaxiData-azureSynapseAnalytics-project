@@ -1,6 +1,9 @@
 {
-	"name": "12_create_silver_trip_data",
+	"name": "7_create_silver_trip_data",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/silver"
+		},
 		"content": {
 			"query": "use nyc_taxi_ldw\n\nif object_id('silver.trip_data_green') is not null drop  EXTERNAL table silver.trip_data_green\n\ncreate external table silver.trip_data_green\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/trip_data_green',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.trip_data_green_csv\n\n\nselect * from silver.trip_data_green\n\ndrop view bronze.vw_trip_data_green_csv\n\ncreate view bronze.vw_trip_data_green_csv \nas\nselect \nresult.filepath(1) as year,\nresult.filepath(2) as month,\nresult.* \nfrom\n OPENROWSET(\n    bulk 'raw/trip_data_green_csv/year=*/month=*/*.csv'\n    , data_source='nyc_taxi_src'\n    , format='CSV'\n    ,FIELDtERMINATOR=','\n    ,FIELDQUOTE='\"'\n    , ROWTERMINATOR='\\n'\n    , parser_version='2.0',\n    HEADER_ROW=true) with(VendorID integer,\n\t\tlpep_pickup_datetime datetime2(7),\n\t\t\tlpep_dropoff_datetime datetime2(7),\n\t\t\t\tstore_and_fwd_flag\tchar(1),\n\t\t\t\tRatecodeID\tSMALLINT,\n\t\t\t\tPULocationID SMALLINT\n\t\t\t\t,\tDOLocationID smallint,\n\t\t\t\t\tpassenger_count smallint,\n\t\t\t\t\t\ttrip_distance\tfloat,\n\t\t\t\t\t\tfare_amount float,\n\t\t\t\t\t\t\textra float,\n\t\t\t\t\t\t\t\tmta_tax\tfloat,\n\t\t\t\t\t\t\t\ttip_amount float,\n\t\t\t\t\t\t\t\t\ttolls_amount float,\n\t\t\t\t\t\t\t\t\t\tehail_fee int,\n\t\t\t\t\t\t\t\t\t\t\timprovement_surcharge float,\n\t\t\t\t\t\t\t\t\t\t\t\ttotal_amount float,\n\t\t\t\t\t\t\t\t\t\t\t\t\tpayment_type smallint,\n\t\t\t\t\t\t\t\t\t\t\t\t\t\ttrip_type SMALLINT,\tcongestion_surcharge float\n\n    ) as result\n\n\n\nselect * from     bronze.vw_trip_data_green_csv \n\n\n\ncreate EXTERNAL table silver.trip_data_green_2020_01\nwith (data_source=nyc_taxi_src\n, location='silver/trip_data_green/year=2020/month=01',\nfile_format=parquet_file_format)\nAS\nselect * from bronze.vw_trip_data_green_csv \nwhere year='2020' and month='01'\n",
 			"metadata": {

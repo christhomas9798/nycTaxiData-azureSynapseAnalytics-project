@@ -1,0 +1,20 @@
+{
+	"name": "2_create_bronze_vendor",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/bronze"
+		},
+		"content": {
+			"query": "\n\n\ndrop external table bronze.vendor\n\nCREATE EXTERNAL TABLE bronze.vendor (\n\tvendor_id smallint,\n\tvendor_name varchar(50)\n\t)\n\tWITH (\n\tLOCATION = 'raw/vendor.csv',\n\tDATA_SOURCE = [nyc_taxi_src],\n\tFILE_FORMAT = [csv_file_format_pv1],\n\treject_value=10,\n\trejected_row_location='rejections/vendor'\n\t)\nGO\n\nselect * from bronze.vendor\n\n\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

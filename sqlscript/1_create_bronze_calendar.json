@@ -1,0 +1,20 @@
+{
+	"name": "1_create_bronze_calendar",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/bronze"
+		},
+		"content": {
+			"query": "\nif object_id('bronze.calendar') is not NULL\n drop EXTERNAL table bronze.calendar\n\nCREATE EXTERNAL TABLE bronze.calendar (\n\t[date_key] int,\n\t[date] date,\n\t[year] smallint,\n\t[month] smallint,\n\t[day] smallint,\n\t[day_name] nvarchar(15),\n\t[day_of_year] smallint,\n\t[week_of_month] smallint,\n\t[week_of_year] smallint,\n\t[month_name] nvarchar(15),\n\t[year_month] int,\n\t[year_week] int\n\t)\n\tWITH (\n\tLOCATION = 'raw/calendar.csv',\n\tDATA_SOURCE = [nyc_taxi_src],\n\tFILE_FORMAT = [csv_file_format_pv1],\n\treject_value=10,\n\trejected_row_location='rejections/calendar'\n\t)\nGO\n\n\n\nSELECT TOP 100 * FROM bronze.calendar\nGO\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
