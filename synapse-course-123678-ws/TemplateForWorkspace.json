@@ -115,7 +115,7 @@
 					},
 					"v_usp_name": {
 						"type": "String",
-						"defaultValue": "silver.usp_taxi_zone"
+						"defaultValue": "silver.usp_silver_taxi_zone"
 					}
 				},
 				"annotations": [],
@@ -265,7 +265,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"storedProcedureName": "[silver].[usp_taxi_zone]"
+							"storedProcedureName": "[silver].[usp_silver_taxi_zone]"
 						},
 						"linkedServiceName": {
 							"referenceName": "ls_serverless_sql_pool_nyc_taxi_ldw",
@@ -1119,7 +1119,7 @@
 					"name": "nyc_taxi/silver"
 				},
 				"content": {
-					"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_calendar\nAS\nbegin\nif object_id('silver.calendar') is not null drop  EXTERNAL table silver.calendar;\n\ncreate external table silver.calendar\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/calendar',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.calendar;\n\n end \n\n\n",
+					"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_calendar') is not null drop procedure silver.usp_calendar;\n\ncreate or alter PROCEDURE silver.usp_silver_calendar\nAS\nbegin\nif object_id('silver.calendar') is not null drop  EXTERNAL table silver.calendar;\n\ncreate external table silver.calendar\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/calendar',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.calendar;\n\n end \n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1142,7 +1142,7 @@
 					"name": "nyc_taxi/silver"
 				},
 				"content": {
-					"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_payment_type\nAS\nbegin\nif object_id('silver.payment_type') is not null drop  EXTERNAL table silver.payment_type;\n\ncreate external table silver.payment_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/payment_type',\n    file_format=parquet_file_format\n)\nAS\nselect  payment_type, payment_type_desc from openrowset(\n    bulk 'raw/payment_type.json',\n    data_source='nyc_taxi_src',\n    format='CSV',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b',\n    ROWTERMINATOR='0x0a'\n) with (jsonContent nvarchar(max))as result\ncross apply OPENjson(jsonContent) with (payment_type tinyint, payment_type_desc varchar(20));\n end \n\n\n",
+					"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_payment_type') is not null drop procedure silver.usp_payment_type;\n\ncreate or alter PROCEDURE silver.usp_silver_payment_type\nAS\nbegin\nif object_id('silver.payment_type') is not null drop  EXTERNAL table silver.payment_type;\n\ncreate external table silver.payment_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/payment_type',\n    file_format=parquet_file_format\n)\nAS\nselect  payment_type, payment_type_desc from openrowset(\n    bulk 'raw/payment_type.json',\n    data_source='nyc_taxi_src',\n    format='CSV',\n    FIELDTERMINATOR='0x0b',\n    FIELDQUOTE='0x0b',\n    ROWTERMINATOR='0x0a'\n) with (jsonContent nvarchar(max))as result\ncross apply OPENjson(jsonContent) with (payment_type tinyint, payment_type_desc varchar(20));\n end \n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1165,7 +1165,7 @@
 					"name": "nyc_taxi/silver"
 				},
 				"content": {
-					"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_rate_code\nas\nbegin\n\nif object_id('silver.rate_code') is not null drop  EXTERNAL table silver.rate_code;\n\ncreate external table silver.rate_code\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/rate_code',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vw_rate_code;\n end \n\n\n",
+					"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_rate_code') is not null drop procedure silver.usp_rate_code;\n\ncreate or alter PROCEDURE silver.usp_silver_rate_code\nas\nbegin\n\nif object_id('silver.rate_code') is not null drop  EXTERNAL table silver.rate_code;\n\ncreate external table silver.rate_code\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/rate_code',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vw_rate_code;\n end \n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1188,7 +1188,7 @@
 					"name": "nyc_taxi/silver"
 				},
 				"content": {
-					"query": "use nyc_taxi_ldw;\n\n\ncreate or alter PROCEDURE silver.usp_taxi_zone\nAS\nbegin\nif object_id('silver.taxi_zone') is not null drop  EXTERNAL table silver.taxi_zone;\ncreate external table silver.taxi_zone\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/taxi_zone',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.taxi_zone;\n end \n\n\n",
+					"query": "use nyc_taxi_ldw;\n\nif object_id('silver.usp_silver_taxi_zone') is not null drop procedure silver.usp_silver_taxi_zone;\ncreate or alter PROCEDURE silver.usp_silver_taxi_zone\nAS\nbegin\nif object_id('silver.taxi_zone') is not null drop  EXTERNAL table silver.taxi_zone;\ncreate external table silver.taxi_zone\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/taxi_zone',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.taxi_zone;\n end \n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1234,7 +1234,7 @@
 					"name": "nyc_taxi/silver"
 				},
 				"content": {
-					"query": "create or alter PROCEDURE silver.usp_taxi_zone\nAS\nbegin\n\nif object_id('silver.trip_type') is not null drop  EXTERNAL table silver.trip_type;\n\ncreate external table silver.trip_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/trip_type',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.trip_type;\n\nend",
+					"query": "\nif object_id('silver.usp_trip_type') is not null drop procedure silver.usp_trip_type;\n\n\ncreate or alter PROCEDURE silver.usp_silver_trip_type\nAS\nbegin\n\nif object_id('silver.trip_type') is not null drop  EXTERNAL table silver.trip_type;\n\ncreate external table silver.trip_type\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/trip_type',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.trip_type;\n\nend",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1257,7 +1257,7 @@
 					"name": "nyc_taxi/silver"
 				},
 				"content": {
-					"query": "create or alter PROCEDURE silver.usp_vendor\nAS\nbegin\n\nif object_id('silver.vendor') is not null drop  EXTERNAL table silver.vendor;\n\ncreate external table silver.vendor\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/vendor',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vendor;\n\nend",
+					"query": "if object_id('silver.usp_vendor') is not null drop procedure silver.usp_vendor;\n\n\ncreate or alter PROCEDURE silver.usp_silver_vendor\nAS\nbegin\n\nif object_id('silver.vendor') is not null drop  EXTERNAL table silver.vendor;\n\ncreate external table silver.vendor\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/vendor',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vendor;\n\nend",
 					"metadata": {
 						"language": "sql"
 					},
