@@ -1,6 +1,9 @@
 {
-	"name": "8_create_silver_vendor",
+	"name": "3_create_silver_vendor",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/silver"
+		},
 		"content": {
 			"query": "use nyc_taxi_ldw\n\nif object_id('silver.vendor') is not null drop  EXTERNAL table silver.vendor\n\ncreate external table silver.vendor\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/vendor',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vendor\n\n\nselect * from silver.vendor\n\n",
 			"metadata": {

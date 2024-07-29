@@ -1,6 +1,9 @@
 {
-	"name": "datediffFilepath",
+	"name": "datediff_and_filepath",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/discovery"
+		},
 		"content": {
 			"query": "-- This is auto-generated code\nSELECT\n    DATEDIFF(minute,lpep_pickup_datetime,lpep_dropoff_datetime),lpep_pickup_datetime,lpep_dropoff_datetime\nFROM\n    OPENROWSET(\n        BULK 'trip_data_green_parquet/year=2020/month=01/*',\n        DATA_SOURCE='nyc_taxi_data_raw',\n        FORMAT = 'PARQUET'\n    ) --with ()\n    AS [result]\n\n\n\nexec sp_describe_first_result_set N'SELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK ''trip_data_green_parquet/year=2020/month=01/*'',\n        DATA_SOURCE=''nyc_taxi_data_raw'',\n        FORMAT = ''PARQUET''\n    ) AS [result]\n'\n\n\nselect result.filepath(1) as year,result.filepath(2) as month,count(1) from openrowset( bulk 'trip_data_green_parquet/year=*/month=*/',\ndata_source = 'nyc_taxi_data_raw',\nformat='PARQUET') as result group by result.filepath(1),result.filepath(2)  order by count(1) desc\n\n\n",
 			"metadata": {

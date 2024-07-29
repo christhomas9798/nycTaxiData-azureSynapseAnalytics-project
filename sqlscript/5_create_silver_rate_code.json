@@ -1,6 +1,9 @@
 {
-	"name": "10_create_silver_rate_code",
+	"name": "5_create_silver_rate_code",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/silver"
+		},
 		"content": {
 			"query": "use nyc_taxi_ldw\n\nif object_id('silver.rate_code') is not null drop  EXTERNAL table silver.rate_code\n\ncreate external table silver.rate_code\nwith (\n    data_source=nyc_taxi_src,\n    location='silver/rate_code',\n    file_format=parquet_file_format\n)\nAS\nselect * from bronze.vw_rate_code\n\n\nselect * from silver.rate_code\n\n",
 			"metadata": {

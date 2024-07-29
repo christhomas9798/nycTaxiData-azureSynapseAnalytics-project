@@ -1,0 +1,20 @@
+{
+	"name": "3_create_bronze_trip_type",
+	"properties": {
+		"folder": {
+			"name": "nyc_taxi/bronze"
+		},
+		"content": {
+			"query": "\ndrop external table bronze.trip_type\n\nCREATE EXTERNAL TABLE bronze.trip_type (\n\ttrip_type smallint,\n\ttrip_type_desc varchar(50)\n\t)\n\tWITH (\n\tLOCATION = 'raw/trip_type.tsv',\n\tDATA_SOURCE = [nyc_taxi_src],\n\tFILE_FORMAT = [tsv_file_format_pv1],\n\treject_value=10,\n\trejected_row_location='rejections/trip_type'\n\t)\nGO\n\nselect * from bronze.trip_type\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

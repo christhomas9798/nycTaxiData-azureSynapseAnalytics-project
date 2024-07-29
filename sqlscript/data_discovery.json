@@ -1,5 +1,5 @@
 {
-	"name": "dataDiscovery",
+	"name": "data_discovery",
 	"properties": {
 		"folder": {
 			"name": "nyc_taxi/discovery"

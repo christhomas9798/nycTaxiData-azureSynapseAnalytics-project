@@ -1,6 +1,9 @@
 {
-	"name": "create_bronze_tables",
+	"name": "6_create_bronze_taxi_zone",
 	"properties": {
+		"folder": {
+			"name": "nyc_taxi/bronze"
+		},
 		"content": {
 			"query": "-- Create a new external table\n\nif OBJECT_id('bronze.taxi_zone') is not NULL\ndrop  external table bronze.taxi_zone\n\nCREATE EXTERNAL TABLE bronze.taxi_zone\n    ( location_id smallint,\n    borough varchar(1)\n    ,zone varchar(50),\n    service_zone varchar(15) )\n    WITH (\n        LOCATION = 'raw/taxi_zone.csv',\n        DATA_SOURCE = nyc_taxi_src,\n         FILE_FORMAT = csv_file_format_pv1,\n         reject_value=10,\n         rejected_row_location='rejections/taxi_zone')\n\n         select * from bronze.taxi_zone",
 			"metadata": {
