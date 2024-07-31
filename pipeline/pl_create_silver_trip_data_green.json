@@ -1,0 +1,211 @@
+{
+	"name": "pl_create_silver_trip_data_green",
+	"properties": {
+		"activities": [
+			{
+				"name": "get trip year and month",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_serverless_sql_pool_nyc_taxi_ldw",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "select distinct year,month from bronze.vw_trip_data_green_csv;\n"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "ForEach year and month",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "get trip year and month",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('get trip year and month').output.resultSets[0].rows",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 5,
+					"activities": [
+						{
+							"name": "Delete Partitions",
+							"type": "Delete",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_nyc_taxi_dynamic",
+									"type": "DatasetReference",
+									"parameters": {
+										"p_folderPath": {
+											"value": "silver/trip_data_green/year=@{item().year}/month=@{item().month}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Create partition",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delete Partitions",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[silver].[usp_silver_trip_data_green]",
+								"storedProcedureParameters": {
+									"month": {
+										"value": {
+											"value": "@item().month",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"year": {
+										"value": {
+											"value": "@item().year",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_serverless_sql_pool_nyc_taxi_ldw",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Check if view exists",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "ForEach year and month",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "ls_serverless_sql_pool_nyc_taxi_ldw",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "IF OBJECT_ID('silver.vw_trip_data_green') IS NOT NULL\nBEGIN\n    SELECT 1 AS Result;\nEND\nELSE\nBEGIN\n    SELECT 0 AS Result;\nEND\n"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "If not exists",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check if view exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Check if view exists').output.resultSets[0].rows[0].Result,0)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Create silver view",
+							"type": "Script",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "ls_serverless_sql_pool_nyc_taxi_ldw",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "NonQuery",
+										"text": "create view silver.vw_trip_data_green as \nselect result.filepath(1) as year, result.filepath(2) as month, result.* from openrowset(\n    bulk 'silver/trip_data_green/year=*/month=*/'\n    , data_source='nyc_taxi_src',\n    format='PARQUET'\n) \nwith(VendorID\tint,\nlpep_pickup_datetime DATETIME2(7),\n\tlpep_dropoff_datetime\tDATETIME2(7),\n    store_and_fwd_flag char(1)\t,\n    RatecodeID int,\n    \tPULocationID int,\n        \tDOLocationID int,\n            \tpassenger_count\tint,\n                trip_distance\tfloat,\n                fare_amount float,\n                \textra\tfloat,\n                    mta_tax float,\n                    \ttip_amount float,\n                        \ttolls_amount float,\n                            \tehail_fee int,\n                                \timprovement_surcharge FLOAT,\n                                    \ttotal_amount float,\n                                        \tpayment_type int,\n                                            \ttrip_type int,\n                                                \tcongestion_surcharge float)\nas result;"
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": []
+	}
+}
