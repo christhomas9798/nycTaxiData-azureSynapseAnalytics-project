@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 4",
+	"properties": {
+		"content": {
+			"query": "create external table gold.trip_data_green with (data_source= nyc_taxi_src,\nlocation ='gold/trip_data_export',\nfile_format=csv_file_format)\nas \nSELECT *\n FROM [gold].[vw_trip_data_green]\n\n select count(*) from gold.trip_data_green\n\n drop external table gold.trip_data_green\n\n drop view gold.vw_trip_data_green\n\n select count(*) from gold.vw_trip_data_green",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
