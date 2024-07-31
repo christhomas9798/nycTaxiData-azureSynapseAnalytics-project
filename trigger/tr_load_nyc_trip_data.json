@@ -2,7 +2,7 @@
 	"name": "tr_load_nyc_trip_data",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Started",
+		"runtimeState": "Stopped",
 		"pipelines": [
 			{
 				"pipelineReference": {
