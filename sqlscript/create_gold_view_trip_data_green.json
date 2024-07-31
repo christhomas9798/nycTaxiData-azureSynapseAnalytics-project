@@ -5,7 +5,7 @@
 			"name": "nyc_taxi/gold"
 		},
 		"content": {
-			"query": "\n\ndrop view gold.vw_trip_data_green\n\ncreate view gold.vw_trip_data_green\nAS\n\nselect result.filepath(1) as year, result.filepath(2) as month ,* from OPENROWSET(\n    bulk 'gold/trip_data_green/year=*/month=*/*.parquet',\n    data_source='nyc_taxi_src',\n    format='PARQUET') with (borough varchar(15) '$.Borough',\n    trip_date date,\n    trip_day varchar(10),\n    trip_day_weekend_ind char(1),\n    card_trip_count int,\n    cash_trip_count int,\n    street_hail_trip_count int,\n    dispatch_trip_count int,\n    trip_distance float ,\n    trip_duration int,\n    fare_amount float)\n    \n    as result\n\n\n    select * from gold.vw_trip_data_green",
+			"query": "\n\ndrop view gold.vw_trip_data_green\n\ncreate view gold.vw_trip_data_green\nAS\nselect result.filepath(1) as year, result.filepath(2) as month ,* from OPENROWSET(\n    bulk 'gold/trip_data_green/year=*/month=*/*.parquet',\n    data_source='nyc_taxi_src',\n    format='PARQUET') with (borough varchar(15) '$.Borough',\n    trip_date date,\n    trip_day varchar(10),\n    trip_day_weekend_ind char(1),\n    card_trip_count int,\n    cash_trip_count int,\n    street_hail_trip_count int,\n    dispatch_trip_count int,\n    trip_distance float ,\n    trip_duration int,\n    fare_amount float)\n    \n    as result\n\n\n    select * from gold.vw_trip_data_green",
 			"metadata": {
 				"language": "sql"
 			},

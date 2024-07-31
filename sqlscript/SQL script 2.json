@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 2",
+	"properties": {
+		"content": {
+			"query": "use nyc_taxi_ldw\n\nselect distinct year,month from bronze.vw_trip_data_green_csv;\n\n\nSELECT OBJECT_DEFINITION(OBJECT_ID('bronze.vw_trip_data_green_csv')) AS ViewDefinition;\n\n\ncreate view bronze.vw_trip_data_green_csv as select result.filepath(1) as year, result.filepath(2) as month, result.* from OPENROWSET( bulk 'raw/trip_data_green_csv/year=*/month=*/*.csv' , data_source='nyc_taxi_src' , format='CSV' ,FIELDtERMINATOR=',' ,FIELDQUOTE='\"' , ROWTERMINATOR='\\n' , parser_version='2.0', HEADER_ROW=true) with(VendorID integer, lpep_pickup_datetime datetime2(7), lpep_dropoff_datetime datetime2(7), store_and_fwd_flag char(1), RatecodeID SMALLINT, PULocationID SMALLINT , DOLocationID smallint, passenger_count smallint, trip_distance float, fare_amount float, extra float, mta_tax float, tip_amount float, tolls_amount float, ehail_fee int, improvement_surcharge float, total_amount float, payment_type smallint, trip_type SMALLINT, congestion_surcharge float ) as result\n\n\nselect * from silver.vw_trip_data_green\n\n\n\nif OBJECT_ID('silver.vw_trip_data_green') is null ",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "nyc_taxi_ldw",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
