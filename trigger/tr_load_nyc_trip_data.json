@@ -1,0 +1,24 @@
+{
+	"name": "tr_load_nyc_trip_data",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_execute_all_pipeline",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 15,
+				"startTime": "2024-07-31T17:10:00",
+				"timeZone": "India Standard Time"
+			}
+		}
+	}
+}
