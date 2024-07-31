@@ -66,6 +66,8 @@
 			{
 				"name": "Create Gold Trip Data Green Agg",
 				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Create Silver Trip Data Green",
