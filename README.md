@@ -49,5 +49,6 @@ This project demonstrates a solution for managing and analyzing taxi data using 
 - **Azure Synapse Analytics**
 - **Azure Data Lake Storage Gen2 (ADLS Gen2)**
 - **Serverless SQL Pool**
+- **Spark Pool**
 - **Power BI**
 - **Synapse Pipelines**
