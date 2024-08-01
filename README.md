@@ -46,8 +46,8 @@ This project demonstrates a solution for managing and analyzing taxi data using 
 
 ## Tools Used
 
-- **Azure Synapse Analytics**: For data integration, processing, and analytics.
-- **Azure Data Lake Storage Gen2 (ADLS Gen2)**: For raw data storage.
-- **Serverless SQL Pool**: For querying and processing data.
-- **Power BI**: For business intelligence and reporting.
-- **Synapse Pipelines**: For data pipeline scheduling and monitoring.
+- **Azure Synapse Analytics**
+- **Azure Data Lake Storage Gen2 (ADLS Gen2)**
+- **Serverless SQL Pool**
+- **Power BI**
+- **Synapse Pipelines**
