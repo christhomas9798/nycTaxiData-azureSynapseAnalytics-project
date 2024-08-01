@@ -5,6 +5,9 @@
 		"workspaceName": {
 			"value": "synapse-course-123678-ws"
 		},
+		"CosmosDbNoSql1_connectionString": {
+			"value": ""
+		},
 		"synapse-course-123678-ws-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-course-123678-ws.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},

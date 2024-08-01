@@ -7,6 +7,10 @@
 			"metadata": "Workspace name",
 			"defaultValue": "synapse-course-123678-ws"
 		},
+		"CosmosDbNoSql1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'CosmosDbNoSql1'"
+		},
 		"synapse-course-123678-ws-WorkspaceDefaultSqlServer_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'synapse-course-123678-ws-WorkspaceDefaultSqlServer'",
@@ -957,6 +961,53 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/pl_spark_create_gold_trip_data_green_agg')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Create Gold Trip Data Green Agg",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "spark_create_trip_data_green_agg",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "coursepool",
+								"type": "BigDataPoolReference"
+							},
+							"conf": {
+								"spark.dynamicAllocation.enabled": null,
+								"spark.dynamicAllocation.minExecutors": null,
+								"spark.dynamicAllocation.maxExecutors": null
+							},
+							"numExecutors": null
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/spark_create_trip_data_green_agg')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/coursepool')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/ds_nyc_taxi_dynamic')]",
 			"type": "Microsoft.Synapse/workspaces/datasets",
 			"apiVersion": "2019-06-01-preview",
@@ -1012,6 +1063,25 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/linkedServices/ls_synapse_course_123678_dl')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/CosmosDbNoSql1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('CosmosDbNoSql1_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
 			]
 		},
 		{
@@ -1672,6 +1742,46 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "select * from     INFORMATION_SCHEMA.TABLES\n\nselect * from dbo.trip_data_green_agg\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "nyc_taxi_ldw_spark",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "create external table gold.trip_data_green with (data_source= nyc_taxi_src,\nlocation ='gold/trip_data_export',\nfile_format=csv_file_format)\nas \nSELECT *\n FROM [gold].[vw_trip_data_green]\n\n select count(*) from gold.trip_data_green\n\n drop external table gold.trip_data_green\n\n drop view gold.vw_trip_data_green\n\n select count(*) from gold.vw_trip_data_green",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "nyc_taxi_ldw",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/create_databases')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -1810,6 +1920,29 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/synapse_link_query_heartbeat')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"folder": {
+					"name": "nyc_taxi/synapse_link"
+				},
+				"content": {
+					"query": "IF (NOT EXISTS(SELECT * FROM sys.credentials WHERE name = 'synapse-course-123678-cosmos-db'))\n    CREATE CREDENTIAL [synapse-course-123678-cosmos-db]\n    WITH IDENTITY = 'SHARED ACCESS SIGNATURE', SECRET = '*************'\nGO\n\nSELECT TOP 100 *\nFROM OPENROWSET(​PROVIDER = 'CosmosDB',\n                CONNECTION = 'Account=synapse-course-123678-cosmos-db;Database=nyctaxidb',\n                OBJECT = 'heartbeat',\n                SERVER_CREDENTIAL = 'synapse-course-123678-cosmos-db'\n) AS [heartbeat]\n\n\ndrop credential [synapse-course-123678-cosmos-db]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/usp_gold_trip_data_green')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -1818,7 +1951,7 @@
 					"name": "nyc_taxi/gold"
 				},
 				"content": {
-					"query": "print('select top 100 td.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) as trip_date\n,c.day_name as trip_day,\ncase when c.day_name in (''Saturday'',''Sunday'') then ''Y'' else ''N'' end as trip_day_weekend_ind,\nsum(case when td.payment_type=1 then 1 else 0 end ) as card_trip_count,\n sum(case when td.payment_type= 2 then 1 else 0 end ) as card_trip_count,\n sum(case when tt.trip_type=1 then 1 else 0 end) as street_hail_trip_count,\n sum(case when tt.trip_type=2 then 1 else 0 end) as dispatch_trip_count,\nsum(td.trip_distance) as trip_distance,\nsum(DATEDIFF(minute,td.lpep_pickup_datetime,td.lpep_dropoff_datetime)) as trip_duration,\nsum(td.fare_amount) as fare_amount\nfrom silver.vw_trip_data_green td\njoin silver.taxi_zone tz on td.PULocationID=tz.LocationID\njoin silver.calendar c on convert(date,lpep_pickup_datetime)=c.date\njoin silver.payment_type pt on pt.payment_type=td.payment_type\njoin silver.trip_type tt on td.trip_type=tt.trip_type\n where td.year='+'2020'+' and td.month ='+'01'+'\ngroup by \ntd.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) \n,c.day_name ')\n\nselect * from  silver.trip_type \n\nSELECT * from silver.payment_type tz  \n\n\n\n\n\n\n\n\n\ncreate or alter procedure gold.usp_gold_trip_data_green\n@year varchar(4),\n@month varchar(2)\nAS\n\nBEGIN\nDECLARE @create_sql_statement nvarchar(max),\n@drop_sql_statement NVARCHAR(max);\n\nset @create_sql_statement= \n'create external table gold.trip_data_green_'+@year+'_'+@month+'\nwith ( data_source=nyc_taxi_src,\nlocation=''gold/trip_data_green/year='+@year+'/month='+@month+''',\nfile_format=parquet_file_format)\nas\nselect top 100 td.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) as trip_date\n,c.day_name as trip_day,\ncase when c.day_name in (''Saturday'',''Sunday'') then ''Y'' else ''N'' end as trip_day_weekend_ind,\nsum(case when td.payment_type=1 then 1 else 0 end ) as card_trip_count,\n sum(case when td.payment_type= 2 then 1 else 0 end ) as cash_trip_count,\n sum(case when tt.trip_type=1 then 1 else 0 end) as street_hail_trip_count,\n sum(case when tt.trip_type=2 then 1 else 0 end) as dispatch_trip_count,\nsum(td.trip_distance) as trip_distance,\nsum(DATEDIFF(minute,td.lpep_pickup_datetime,td.lpep_dropoff_datetime)) as trip_duration,\nsum(td.fare_amount) as fare_amount\nfrom silver.vw_trip_data_green td\njoin silver.taxi_zone tz on td.PULocationID=tz.LocationID\njoin silver.calendar c on convert(date,lpep_pickup_datetime)=c.date\njoin silver.payment_type pt on pt.payment_type=td.payment_type\njoin silver.trip_type tt on td.trip_type=tt.trip_type\n where td.year='+'2020'+' and td.month ='+'01'+'\ngroup by \ntd.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) \n,c.day_name ';\n\nexec sp_executesql @create_sql_statement;\n\nset @drop_sql_statement=\n'drop external table gold.trip_data_green_'+@year+'_'+@month+'';\n\nexec sp_executesql @drop_sql_statement;\n\n\nend;\n\nexec gold.usp_gold_trip_data_green '2021', '01' \n\n\nselect * from gold.trip_data_green_2021_01\n\nSELECT OBJECT_DEFINITION(OBJECT_ID('gold.usp_gold_trip_data_green')) AS ProcedureDefinition\n\n\n\n\n\n\nexec gold.usp_gold_trip_data_green '2021', '01' ;\nexec gold.usp_gold_trip_data_green '2021', '02' ;\nexec gold.usp_gold_trip_data_green '2021', '03' ;\nexec gold.usp_gold_trip_data_green '2021', '04' ;\nexec gold.usp_gold_trip_data_green '2021', '05' ;\nexec gold.usp_gold_trip_data_green '2021', '06' ;\nexec gold.usp_gold_trip_data_green '2020', '01' ;\nexec gold.usp_gold_trip_data_green '2020', '02' ;\nexec gold.usp_gold_trip_data_green '2020', '03' ;\nexec gold.usp_gold_trip_data_green '2020', '04' ;\nexec gold.usp_gold_trip_data_green '2020', '05' ;\nexec gold.usp_gold_trip_data_green '2020', '06' ;\nexec gold.usp_gold_trip_data_green '2020', '07' ;\nexec gold.usp_gold_trip_data_green '2020', '08' ;\nexec gold.usp_gold_trip_data_green '2020', '09' ;\nexec gold.usp_gold_trip_data_green '2020', '10' ;\nexec gold.usp_gold_trip_data_green '2020', '11' ;\nexec gold.usp_gold_trip_data_green '2020', '12' ;\n\n",
+					"query": "print('select top 100 td.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) as trip_date\n,c.day_name as trip_day,\ncase when c.day_name in (''Saturday'',''Sunday'') then ''Y'' else ''N'' end as trip_day_weekend_ind,\nsum(case when td.payment_type=1 then 1 else 0 end ) as card_trip_count,\n sum(case when td.payment_type= 2 then 1 else 0 end ) as card_trip_count,\n sum(case when tt.trip_type=1 then 1 else 0 end) as street_hail_trip_count,\n sum(case when tt.trip_type=2 then 1 else 0 end) as dispatch_trip_count,\nsum(td.trip_distance) as trip_distance,\nsum(DATEDIFF(minute,td.lpep_pickup_datetime,td.lpep_dropoff_datetime)) as trip_duration,\nsum(td.fare_amount) as fare_amount\nfrom silver.vw_trip_data_green td\njoin silver.taxi_zone tz on td.PULocationID=tz.LocationID\njoin silver.calendar c on convert(date,lpep_pickup_datetime)=c.date\njoin silver.payment_type pt on pt.payment_type=td.payment_type\njoin silver.trip_type tt on td.trip_type=tt.trip_type\n where td.year='+'2020'+' and td.month ='+'01'+'\ngroup by \ntd.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) \n,c.day_name ')\n\nselect * from  silver.trip_type \n\nSELECT * from silver.payment_type tz  \n\n\n\n\n\n\n\n\n\ncreate or alter procedure gold.usp_gold_trip_data_green\n@year varchar(4),\n@month varchar(2)\nAS\n\nBEGIN\nDECLARE @create_sql_statement nvarchar(max),\n@drop_sql_statement NVARCHAR(max);\n\nset @create_sql_statement= \n'create external table gold.trip_data_green_'+@year+'_'+@month+'\nwith ( data_source=nyc_taxi_src,\nlocation=''gold/trip_data_green/year='+@year+'/month='+@month+''',\nfile_format=parquet_file_format)\nas\nselect td.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) as trip_date\n,c.day_name as trip_day,\ncase when c.day_name in (''Saturday'',''Sunday'') then ''Y'' else ''N'' end as trip_day_weekend_ind,\nsum(case when td.payment_type=1 then 1 else 0 end ) as card_trip_count,\n sum(case when td.payment_type= 2 then 1 else 0 end ) as cash_trip_count,\n sum(case when tt.trip_type=1 then 1 else 0 end) as street_hail_trip_count,\n sum(case when tt.trip_type=2 then 1 else 0 end) as dispatch_trip_count,\nsum(td.trip_distance) as trip_distance,\nsum(DATEDIFF(minute,td.lpep_pickup_datetime,td.lpep_dropoff_datetime)) as trip_duration,\nsum(td.fare_amount) as fare_amount\nfrom silver.vw_trip_data_green td\njoin silver.taxi_zone tz on td.PULocationID=tz.LocationID\njoin silver.calendar c on convert(date,lpep_pickup_datetime)=c.date\njoin silver.payment_type pt on pt.payment_type=td.payment_type\njoin silver.trip_type tt on td.trip_type=tt.trip_type\n where td.year='+@year+' and td.month ='+@month+'\ngroup by \ntd.year,td.month,tz.Borough ,convert(date,lpep_pickup_datetime) \n,c.day_name ';\n\nexec sp_executesql @create_sql_statement;\n\nset @drop_sql_statement=\n'drop external table gold.trip_data_green_'+@year+'_'+@month+'';\n\nexec sp_executesql @drop_sql_statement;\n\n\nend;\n\nexec gold.usp_gold_trip_data_green '2021', '01' \n\n\nselect * from gold.trip_data_green_2021_01\n\nSELECT OBJECT_DEFINITION(OBJECT_ID('gold.usp_gold_trip_data_green')) AS ProcedureDefinition\n\n\n\n\n\n\nexec gold.usp_gold_trip_data_green '2021', '01' ;\nexec gold.usp_gold_trip_data_green '2021', '02' ;\nexec gold.usp_gold_trip_data_green '2021', '03' ;\nexec gold.usp_gold_trip_data_green '2021', '04' ;\nexec gold.usp_gold_trip_data_green '2021', '05' ;\nexec gold.usp_gold_trip_data_green '2021', '06' ;\nexec gold.usp_gold_trip_data_green '2020', '01' ;\nexec gold.usp_gold_trip_data_green '2020', '02' ;\nexec gold.usp_gold_trip_data_green '2020', '03' ;\nexec gold.usp_gold_trip_data_green '2020', '04' ;\nexec gold.usp_gold_trip_data_green '2020', '05' ;\nexec gold.usp_gold_trip_data_green '2020', '06' ;\nexec gold.usp_gold_trip_data_green '2020', '07' ;\nexec gold.usp_gold_trip_data_green '2020', '08' ;\nexec gold.usp_gold_trip_data_green '2020', '09' ;\nexec gold.usp_gold_trip_data_green '2020', '10' ;\nexec gold.usp_gold_trip_data_green '2020', '11' ;\nexec gold.usp_gold_trip_data_green '2020', '12' ;\n\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -1994,15 +2127,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/coursepool')]",
-			"type": "Microsoft.Synapse/workspaces/bigDataPools",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/demo notebook')]",
 			"type": "Microsoft.Synapse/workspaces/notebooks",
 			"apiVersion": "2019-06-01-preview",
@@ -2023,7 +2147,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "dcf4259b-5529-4c3b-aeda-6dff71ccca25"
+						"spark.autotune.trackingId": "9b7cafce-bec2-45a7-a838-b08f6e972013"
 					}
 				},
 				"metadata": {
@@ -2048,8 +2172,7 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -2114,7 +2237,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "dc6b63e7-3346-4107-9c97-807c8f7406cf"
+						"spark.autotune.trackingId": "bc661747-1dd0-4744-a366-f2a3f0c68079"
 					}
 				},
 				"metadata": {
@@ -2139,15 +2262,13 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"x='ee'"
 						],
@@ -2350,18 +2471,130 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"name": "[concat(parameters('workspaceName'), '/synapse_link_query_heartbeat')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "coursepool",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "b75e692f-8fa0-4b8a-b13c-053dcecca95c"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/0f759b55-a284-452f-95a4-22eb04fcd67b/resourceGroups/synapse-course-rg/providers/Microsoft.Synapse/workspaces/synapse-course-123678-ws/bigDataPools/coursepool",
+						"name": "coursepool",
+						"type": "Spark",
+						"endpoint": "https://synapse-course-123678-ws.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/coursepool",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 3,
+						"cores": 4,
+						"memory": 28
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {
+							"collapsed": false
+						},
+						"source": [
+							"# Read from Cosmos DB analytical store into a Spark DataFrame and display 10 rows from the DataFrame\n",
+							"# To select a preferred list of regions in a multi-region Cosmos DB account, add .option(\"spark.cosmos.preferredRegions\", \"<Region1>,<Region2>\")\n",
+							"\n",
+							"df = spark.read\\\n",
+							"    .format(\"cosmos.olap\")\\\n",
+							"    .option(\"spark.synapse.linkedService\", \"CosmosDbNoSql1\")\\\n",
+							"    .option(\"spark.cosmos.container\", \"heartbeat\")\\\n",
+							"    .load()\n",
+							"\n",
+							"display(df.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 1
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/coursepool')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 20
+				},
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 5,
+					"minNodeCount": 3
+				},
+				"nodeCount": 3,
+				"nodeSize": "Small",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.4",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": true,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "uksouth"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/nyc_taxi_dwh')]",
+			"type": "Microsoft.Synapse/workspaces/sqlPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ctas_trip_data_green_agg')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
+				"folder": {
+					"name": "nyc_taxi/dedicated_sql_pool"
+				},
 				"content": {
-					"query": "select * from     INFORMATION_SCHEMA.TABLES\n\nselect * from dbo.trip_data_green_agg\n",
+					"query": "create schema staging\ngo\n\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'parquet_file_format') \n\tCREATE EXTERNAL FILE FORMAT [parquet_file_format] \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'nyc_taxi_data_src') \n\tCREATE EXTERNAL DATA SOURCE [nyc_taxi_data_src] \n\tWITH (\n\t\tLOCATION = 'abfss://nyc-taxi-data@synapsecourse123678dl.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE staging.ext_trip_data_green_agg (\n\t[pu_location_id] smallint,\n\t[do_location_id] smallint,\n\t[total_trip_count] bigint,\n\t[total_fare_amount] float\n\t)\n\tWITH (\n\tLOCATION = 'gold/trip_data_green_agg',\n\tDATA_SOURCE = [nyc_taxi_data_src],\n\tFILE_FORMAT = [parquet_file_format]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM staging.ext_trip_data_green_agg\nGO\n\ncreate schema dwh\n\ncreate table dwh.trip_data_green_agg\nwith (CLUSTERED COLUMNSTORE INDEX,\nDISTRIBUTION = ROUND_ROBIN)\nAS SELECT * from staging.ext_trip_data_green_agg",
 					"metadata": {
 						"language": "sql"
 					},
 					"currentConnection": {
-						"databaseName": "nyc_taxi_ldw_spark",
-						"poolName": "Built-in"
+						"databaseName": "nyc_taxi_dwh",
+						"poolName": "nyc_taxi_dwh"
 					},
 					"resultLimit": 5000
 				},
@@ -2370,46 +2603,27 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_spark_create_gold_trip_data_green_agg')]",
-			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"name": "[concat(parameters('workspaceName'), '/trip_data_green_agg_copy')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
-				"activities": [
-					{
-						"name": "Create Gold Trip Data Green Agg",
-						"type": "SynapseNotebook",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebook": {
-								"referenceName": "spark_create_trip_data_green_agg",
-								"type": "NotebookReference"
-							},
-							"snapshot": true,
-							"sparkPool": {
-								"referenceName": "coursepool",
-								"type": "BigDataPoolReference"
-							},
-							"conf": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
+				"folder": {
+					"name": "nyc_taxi/dedicated_sql_pool"
 				},
-				"annotations": []
+				"content": {
+					"query": "/*IF NOT EXISTS (SELECT * FROM sys.objects O JOIN sys.schemas S ON O.schema_id = S.schema_id WHERE O.NAME = 'trip_data_green_agg_copy' AND O.TYPE = 'U' AND S.NAME = 'dwh')\nCREATE TABLE dwh.trip_data_green_agg_copy\n\t(\n\t [pu_location_id] smallint,\n\t [do_location_id] smallint,\n\t [total_trip_count] bigint,\n\t [total_fare_amount] float\n\t)\nWITH\n\t(\n\tDISTRIBUTION = ROUND_ROBIN,\n\t CLUSTERED COLUMNSTORE INDEX\n\t -- HEAP\n\t)\nGO\n\n--Uncomment the 4 lines below to create a stored procedure for data pipeline orchestration​\n--CREATE PROC bulk_load_trip_data_green_agg_copy\n--AS\n--BEGIN\n\n*/\n\n\nCOPY INTO dwh.trip_data_green_agg_copy\nFROM 'https://synapsecourse123678dl.dfs.core.windows.net/nyc-taxi-data/gold/trip_data_green_agg'\nWITH\n(\n\tFILE_TYPE = 'PARQUET'\n\t,MAXERRORS = 0\n\t,COMPRESSION = 'snappy',\n\tAUTO_CREATE_TABLE='ON'\n)\n--END\nGO\n\nSELECT TOP 100 * FROM dwh.trip_data_green_agg_copy\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "nyc_taxi_dwh",
+						"poolName": "nyc_taxi_dwh"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
 			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/notebooks/spark_create_trip_data_green_agg')]",
-				"[concat(variables('workspaceId'), '/bigDataPools/coursepool')]"
-			]
+			"dependsOn": []
 		}
 	]
 }
